@@ -1,293 +1,218 @@
-# Complete Guide to `TSA1-Aarchi.ipynb` (Time Series Analysis - Practical 1)
+# Comprehensive Guide to `TSA1-Aarchi.ipynb` (With Detailed Graph Explanations)
 
-This document provides a complete, step-by-step breakdown of everything performed in **`SC/Time Series Analysis/Practical 1/TSA1-Aarchi.ipynb`**. It covers theoretical concepts, statistical tests, model comparisons, differencing steps for stationarity, and ready-to-use Python code reference.
+This document provides a complete, step-by-step breakdown of **`SC/Time Series Analysis/Practical 1/TSA1-Aarchi.ipynb`**, explaining every code line, statistical test, differencing stage, and **every single graph present in the notebook**.
 
 ---
 
 ## 📋 Table of Contents
-1. [Overview & Objectives](#1-overview--objectives)
-2. [Notebook Architecture & Workflow Overview](#2-notebook-architecture--workflow-overview)
-3. [Key Concepts & Statistical Tests](#3-key-concepts--statistical-tests)
-4. [Section-by-Section Breakdown](#4-section-by-section-breakdown)
-   - [Phase 1: Data Preprocessing & Initial Visualization](#phase-1-data-preprocessing--initial-visualization)
-   - [Phase 2: Decomposition & Mann-Kendall Trend Test](#phase-2-decomposition--mann-kendall-trend-test)
-   - [Phase 3: Train-Test Split](#phase-3-train-test-split)
-   - [Phase 4: Exponential Smoothing Forecasting Models](#phase-4-exponential-smoothing-forecasting-models)
-   - [Phase 5: Accuracy Evaluation (MAPE)](#phase-5-accuracy-evaluation-mape)
-   - [Phase 6: Stationarity Testing & Multi-Stage Differencing](#phase-6-stationarity-testing--multi-stage-differencing)
-5. [Summary Matrix of Stationarity Transformation](#5-summary-matrix-of-stationarity-transformation)
-6. [Complete Code Cheatsheet](#6-complete-code-cheatsheet)
+1. [Notebook Overview](#1-notebook-overview)
+2. [Detailed Explanation of ALL Graphs in `TSA1-Aarchi.ipynb`](#2-detailed-explanation-of-all-graphs-in-tsa1-aarchipynb)
+   - [Graph 1: Raw AirPassengers Time Series Line Plot](#graph-1-raw-airpassengers-time-series-line-plot)
+   - [Graph 2: Multiplicative Seasonal Decomposition (4 Sub-Plots)](#graph-2-multiplicative-seasonal-decomposition-4-sub-plots)
+   - [Graph 3: Single Exponential Smoothing (SES) Forecast Plot](#graph-3-single-exponential-smoothing-ses-forecast-plot)
+   - [Graph 4: Double Exponential Smoothing (Holt's Model) Forecast Plot](#graph-4-double-exponential-smoothing-holts-model-forecast-plot)
+   - [Graph 5: Triple Exponential Smoothing (Holt-Winters Additive) Plot](#graph-5-triple-exponential-smoothing-holt-winters-additive-plot)
+   - [Graph 6: Triple Exponential Smoothing (Holt-Winters Multiplicative) Plot](#graph-6-triple-exponential-smoothing-holt-winters-multiplicative-plot)
+   - [Graphs 7 & 8: Raw Data ACF and PACF Plots](#graphs-7--8-raw-data-acf-and-pacf-plots)
+   - [Graphs 9, 10 & 11: Non-Seasonal Differenced Series Line Plot, ACF & PACF](#graphs-9-10--11-non-seasonal-differenced-series-line-plot-acf--pacf)
+   - [Graphs 12, 13 & 14: Seasonal Differenced Series Line Plot, ACF & PACF](#graphs-12-13--14-seasonal-differenced-series-line-plot-acf--pacf)
+   - [Graphs 15, 16 & 17: Combined Differenced Series Line Plot, ACF & PACF](#graphs-15-16--17-combined-differenced-series-line-plot-acf--pacf)
+3. [Statistical Tests Summary & Exam Rules](#3-statistical-tests-summary--exam-rules)
+4. [Aarchi's Exact Code Reference](#4-aarchis-exact-code-reference)
 
 ---
 
-## 1. Overview & Objectives
+## 1. Notebook Overview
 
-In `TSA1-Aarchi.ipynb`, time series analysis and forecasting are performed on the classic **AirPassengers** dataset (monthly international airline passengers from 1949 to 1960, containing 144 observations).
-
-### Main Goals:
-1. **Analyze Trend & Seasonality**: Confirm monotonic trend using statistical tests (Mann-Kendall test) and seasonal decomposition.
-2. **Build & Compare Forecasting Models**: Fit Exponential Smoothing models (Single, Double/Holt's, and Triple/Holt-Winters Additive & Multiplicative) and evaluate their performance using MAPE.
-3. **Achieve Stationarity for Box-Jenkins / ARIMA Preparation**: Test stationarity with **ADF** and **KPSS** tests, plot **ACF** and **PACF**, and apply non-seasonal and seasonal differencing until full stationarity is established.
+`TSA1-Aarchi.ipynb` analyzes 144 monthly observations (1949–1960) of international airline passengers. The notebook explores time series decomposition, trend hypothesis testing, four exponential smoothing models, out-of-sample MAPE evaluation, and a 4-stage stationarity transformation pipeline.
 
 ---
 
-## 2. Notebook Architecture & Workflow Overview
+## 2. Detailed Explanation of ALL Graphs in `TSA1-Aarchi.ipynb`
 
-```
-                      AirPassengers Dataset (144 rows)
-                                     │
-                     ┌───────────────┴───────────────┐
-                     ▼                               ▼
-       Part A: Exponential Smoothing    Part B: Stationarity Analysis
-                     │                               │
-            Decomposition & Trend               Stationarity Tests
-            (Mann-Kendall Test)             (ADF, KPSS, ACF, PACF)
-                     │                               │
-             Train/Test Split               Multi-Stage Differencing
-              (70% / 30%)               ┌────────────┼────────────┐
-                     │                  ▼            ▼            ▼
-             Model Building         Non-Seasonal  Seasonal    Combined
-          ┌──────────┼──────────┐    diff()     diff(12)   sdiff.diff()
-          ▼          ▼          ▼       │            │            │
-         SES       Holt's  Holt-Winters  ADF/KPSS    ADF/KPSS   ADF/KPSS
-                            (Add & Mul) ACF/PACF    ACF/PACF   ACF/PACF
-                                │                                 │
-                            Evaluation                    Fully Stationary
-                           (MAPE Test)                    (Ready for ARIMA)
-```
+### Graph 1: Raw AirPassengers Time Series Line Plot
+* **Code in Notebook**: `sns.lineplot(data); plt.ylabel("#Passengers")`
+* **What it Shows**: A continuous line chart plotting monthly passenger count against time (1949 to 1960).
+* **Visual Interpretation**:
+  1. **Upward Trend**: The overall level increases steadily from ~100 to over 600 passengers.
+  2. **Expanding Seasonal Oscillations**: The height of seasonal peaks (summer travel months) expands every year.
+* **Aarchi's Notebook Observation**: *"We can see that the #passengers is increasing over time, with some seasonality, that is, with every year the trend is amplified."*
 
 ---
 
-## 3. Key Concepts & Statistical Tests
-
-### A. Exponential Smoothing Family
-* **Single Exponential Smoothing (SES)**: Fits level $\alpha$. Used when there is no trend or seasonality. Produces flat forecasts.
-* **Double Exponential Smoothing (Holt's Linear)**: Fits level $\alpha$ and trend $\beta$. Captures linear trends, but ignores seasonality.
-* **Triple Exponential Smoothing (Holt-Winters)**: Fits level $\alpha$, trend $\beta$, and seasonality $\gamma$.
-  * **Additive (`trend='add'`, `seasonal='add'`)**: Used when seasonal variations are constant over time.
-  * **Multiplicative (`trend='add'`, `seasonal='mul'`)**: Used when seasonal variations increase proportionally with the trend.
-
-### B. Mann-Kendall Trend Test
-* Non-parametric test used to check if a monotonic upward or downward trend exists in time series data.
-* **$H_0$ (Null Hypothesis)**: No monotonic trend in the series.
-* **$H_1$ (Alternative Hypothesis)**: A monotonic trend exists.
-
-### C. Stationarity Tests: Dual Testing Approach (ADF & KPSS)
-
-| Test | Null Hypothesis ($H_0$) | Alternative Hypothesis ($H_1$) | Stationary Condition |
-| :--- | :--- | :--- | :--- |
-| **ADF Test** (Augmented Dickey-Fuller) | Series is **Non-Stationary** (Has a unit root) | Series is **Stationary** | **p-value < 0.05** (Reject $H_0$) |
-| **KPSS Test** (Kwiatkowski-Phillips-Schmidt-Shin) | Series is **Trend Stationary** (No unit root) | Series is **Non-Stationary** | **p-value > 0.05** (Fail to reject $H_0$) |
-
-> [!IMPORTANT]
-> A series is strictly confirmed as stationary only when **both** conditions are met:
-> 1. **ADF p-value < 0.05** (Rejects unit root)
-> 2. **KPSS p-value > 0.05** (Fails to reject stationarity)
-
-### D. Autocorrelation (ACF) & Partial Autocorrelation (PACF)
-* **ACF (Autocorrelation Function)**: Measures total correlation between series and its lagged values (including indirect effects).
-* **PACF (Partial Autocorrelation Function)**: Measures direct correlation between series and its lagged values, removing intermediate lag effects.
+### Graph 2: Multiplicative Seasonal Decomposition (4 Sub-Plots)
+* **Code in Notebook**: `result = seasonal_decompose(data[['#Passengers']], model='multiplicative', period=12); result.plot()`
+* **What it Shows**: Breaks down the raw time series into 4 distinct components:
+  1. **Observed (Panel 1)**: The original time series plot showing combined trend, seasonality, and noise.
+  2. **Trend (Panel 2)**: Smooth, monotonically increasing curve representing long-term growth in passenger demand.
+  3. **Seasonal (Panel 3)**: Repeating 12-month wave pattern. Identifies consistent peak demand during July/August and lowest demand during November/December.
+  4. **Resid / Residuals (Panel 4)**: Random unexplained noise left after removing trend and seasonality.
+* **Why Multiplicative?**: Multiplicative model ($Y_t = \text{Trend}_t \times \text{Seasonal}_t \times \text{Residual}_t$) is selected because seasonal oscillations grow proportionally as the trend rises.
 
 ---
 
-## 4. Section-by-Section Breakdown
-
-### Phase 1: Data Preprocessing & Initial Visualization
-* Reads `AirPassengers.xls`.
-* Converts `Month` column to datetime object: `pd.to_datetime(data['Month'])`.
-* Sets `Month` as index: `data.set_index('Month')`.
-* Shape: `(144, 1)`.
-* Visualizes `#Passengers` over time using `sns.lineplot()`.
-* **Observation**: Noticeable upward trend with growing seasonal oscillations.
-
-### Phase 2: Decomposition & Mann-Kendall Trend Test
-* Multiplicative seasonal decomposition performed using `seasonal_decompose(data[['#Passengers']], model='multiplicative', period=12)`.
-* Monotonic trend verified using `pymannkendall`:
-  * Code: `mk.original_test(data['#Passengers'])`
-  * **Result**: Confirms significant upward trend ($p < 0.05$).
-
-### Phase 3: Train-Test Split
-* Sequential 70% / 30% split (time-series data must NOT be shuffled):
-  * `train_df`: First 70% (~100 months)
-  * `test_df`: Remaining 30% (~44 months)
-
-### Phase 4: Exponential Smoothing Forecasting Models
-Fits 4 models on `train_df` and forecasts for the length of `test_df`:
-1. **Single Exponential Smoothing (`SimpleExpSmoothing`)**:
-   * Learns level parameter $\alpha$.
-   * Forecast is flat horizontal line.
-2. **Double Exponential Smoothing (`Holt`)**:
-   * Learns level $\alpha$ and trend $\beta$.
-   * Forecast captures upward slope, but misses seasonal waves.
-3. **Holt-Winters Additive (`ExponentialSmoothing(..., trend='add', seasonal='add', seasonal_periods=12)`)**:
-   * Captures upward trend and fixed-amplitude seasonal cycles.
-4. **Holt-Winters Multiplicative (`ExponentialSmoothing(..., trend='add', seasonal='mul', seasonal_periods=12)`)**:
-   * Captures upward trend and expanding seasonal oscillations.
-
-### Phase 5: Accuracy Evaluation (MAPE)
-Evaluates forecast accuracy against actual `test_df['#Passengers']` using `mean_absolute_percentage_error`:
-* `mape_test_add`: Additive Holt-Winters MAPE.
-* `mape_test_mul`: Multiplicative Holt-Winters MAPE.
-* **Conclusion**: Multiplicative model yields lower MAPE because seasonal amplitude expands as the trend rises.
+### Graph 3: Single Exponential Smoothing (SES) Forecast Plot
+* **Code in Notebook**: `plt.plot(data); plt.plot(model_single_fit.fittedvalues); plt.plot(forecast_single)`
+* **What it Shows**: Original data vs. fitted in-sample values vs. out-of-sample forecast.
+* **Visual Breakdown**:
+  - **Fitted Values**: Follows actual data with a 1-step lag.
+  - **Forecast Line**: A completely **flat horizontal line** into the test region.
+* **Exam Key Concept**: SES only models level $\alpha$. Because it lacks trend ($\beta$) and seasonal ($\gamma$) components, its multi-step forecast is always a constant horizontal line.
 
 ---
 
-### Phase 6: Stationarity Testing & Multi-Stage Differencing
-
-#### Stage 1: Raw Un-differenced Data
-* **ADF Test**: `p-value > 0.05` $\rightarrow$ Fails to reject $H_0$ (Non-stationary).
-* **KPSS Test**: `p-value < 0.05` $\rightarrow$ Rejects $H_0$ (Non-stationary).
-* **ACF / PACF Plots**: ACF shows slow linear decay typical of non-stationary series with trend and seasonality.
-
-#### Stage 2: First Non-Seasonal Differencing `diff()`
-* Code: `diff = data['#Passengers'].diff().dropna()`
-* **ADF Test**: `p-value < 0.05` $\rightarrow$ Stationary according to ADF.
-* **KPSS Test**: `p-value < 0.05` $\rightarrow$ Non-stationary according to KPSS.
-* **ACF / PACF Plots**: Significant spikes remaining at seasonal lags (12, 24).
-* **Conclusion**: Non-seasonal differencing removed the trend, but strong seasonality remains.
-
-#### Stage 3: First Seasonal Differencing `diff(12)`
-* Code: `sdiff = data['#Passengers'].diff(periods=12).dropna()`
-* **ADF Test**: `p-value < 0.05` $\rightarrow$ Stationary according to ADF.
-* **KPSS Test**: `p-value < 0.05` $\rightarrow$ Non-stationary according to KPSS.
-* **ACF / PACF Plots**: Significant autocorrelations still present.
-* **Conclusion**: Seasonal differencing removed seasonality, but residual trend/drift remains.
-
-#### Stage 4: Combined Seasonal & Non-Seasonal Differencing `sdiff.diff()`
-* Code: `sddiff = sdiff.diff().dropna()` (Non-seasonal diff applied on seasonal diff series).
-* **ADF Test**: `p-value < 0.05` $\rightarrow$ **PASS** (Stationary).
-* **KPSS Test**: `p-value > 0.05` $\rightarrow$ **PASS** (Trend Stationary / Stationary).
-* **ACF / PACF Plots**: Autocorrelations quickly drop to near zero within confidence bounds.
-* **Conclusion**: The series is now **fully stationary** and ready for ARIMA modeling ($d=1, D=1, s=12$).
+### Graph 4: Double Exponential Smoothing (Holt's Model) Forecast Plot
+* **Code in Notebook**: `plt.plot(data); plt.plot(model_double_fit.fittedvalues); plt.plot(forecast_double)`
+* **What it Shows**: Original data vs. fitted values vs. Holt's linear forecast.
+* **Visual Breakdown**:
+  - **Forecast Line**: A **straight upward-sloping line** continuing into the test period.
+* **Exam Key Concept**: Holt's Linear model fits level $\alpha$ and trend $\beta$. It captures the overall slope of passenger growth, but fails to capture seasonal peaks and troughs.
 
 ---
 
-## 5. Summary Matrix of Stationarity Transformation
-
-| Transformation Stage | Code Expression | ADF Test ($p < 0.05$?) | KPSS Test ($p > 0.05$?) | Stationary Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **Raw Data** | `data['#Passengers']` | ❌ No ($p > 0.05$) | ❌ No ($p < 0.05$) | **Non-Stationary** |
-| **Non-Seasonal Diff** | `.diff()` | ✅ Yes | ❌ No ($p < 0.05$) | **Partially Stationary (Seasonality remains)** |
-| **Seasonal Diff** | `.diff(12)` | ✅ Yes | ❌ No ($p < 0.05$) | **Partially Stationary (Trend remains)** |
-| **Combined Diff** | `.diff(12).diff()` | ✅ Yes | ✅ Yes ($p > 0.05$) | **Fully Stationary** |
+### Graph 5: Triple Exponential Smoothing (Holt-Winters Additive) Plot
+* **Code in Notebook**: `plt.plot(data); plt.plot(model_triple_fit.fittedvalues); plt.plot(forecast_triple)`
+* **What it Shows**: Holt-Winters Additive model forecast (`trend='add'`, `seasonal='add'`).
+* **Visual Breakdown**:
+  - **Forecast Line**: Displays repeating seasonal waves into the test period.
+  - **Defect**: The amplitude (height) of forecasted peaks remains fixed at historical training heights, underestimating the higher peaks of 1958–1960.
+* **Why it Happens**: Additive seasonality assumes seasonal fluctuations add a constant number of passengers regardless of how high the trend rises.
 
 ---
 
-## 6. Complete Code Cheatsheet
+### Graph 6: Triple Exponential Smoothing (Holt-Winters Multiplicative) Plot
+* **Code in Notebook**: `plt.plot(data); plt.plot(model_triple_fit_mul.fittedvalues); plt.plot(forecast_triple_mul)`
+* **What it Shows**: Holt-Winters Multiplicative model forecast (`trend='add'`, `seasonal='mul'`).
+* **Visual Breakdown**:
+  - **Forecast Line**: Displays expanding seasonal waves that grow larger as the trend rises.
+* **Conclusion**: Matches the actual test data almost perfectly, yielding the lowest **MAPE** score (~0.024 or 2.4% error).
 
-Below are all the key Python code blocks used in `TSA1-Aarchi.ipynb` for quick copy-pasting and study:
+---
 
-### 1. Data Imports & Loading
+### Graphs 7 & 8: Raw Data ACF and PACF Plots
+* **Code in Notebook**: `plot_acf(data['#Passengers'])` and `plot_pacf(data['#Passengers'])`
+* **Visual Breakdown**:
+  - **ACF (Autocorrelation)**: Shows very slow, gradual linear decay across lags 1 to 40 with wave-like bumps at lag 12, 24, 36.
+  - **PACF (Partial Autocorrelation)**: Extremely large dominant spike at Lag 1, while subsequent lags drop sharply.
+* **Indication**: Slow decay in ACF confirms non-stationarity due to trend and strong seasonality.
+
+---
+
+### Graphs 9, 10 & 11: Non-Seasonal Differenced Series Line Plot, ACF & PACF
+* **Code in Notebook**: `diff = data['#Passengers'].diff().dropna()`
+* **Visual Breakdown**:
+  - **Line Plot (Graph 9)**: Series centers around 0, showing trend removal.
+  - **ACF Plot (Graph 10)**: Displays large prominent positive spikes at seasonal lags **12, 24, and 36**.
+  - **PACF Plot (Graph 11)**: Shows negative spikes at seasonal intervals.
+* **Indication**: Non-seasonal differencing removed trend, but strong **12-month seasonality remains**.
+
+---
+
+### Graphs 12, 13 & 14: Seasonal Differenced Series Line Plot, ACF & PACF
+* **Code in Notebook**: `sdiff = data['#Passengers'].diff(periods=12).dropna()`
+* **Visual Breakdown**:
+  - **Line Plot (Graph 12)**: Seasonal oscillations removed.
+  - **ACF Plot (Graph 13)**: Shows slow linear decay across initial lags (1, 2, 3, 4).
+  - **PACF Plot (Graph 14)**: Dominant spike at Lag 1.
+* **Indication**: Seasonal differencing removed seasonality, but **residual trend / drift remains**.
+
+---
+
+### Graphs 15, 16 & 17: Combined Differenced Series Line Plot, ACF & PACF
+* **Code in Notebook**: `sddiff = sdiff.diff().dropna()`
+* **Visual Breakdown**:
+  - **Line Plot (Graph 15)**: Fluctuates randomly around mean 0 with stable variance.
+  - **ACF Plot (Graph 16)**: Autocorrelation at Lag 0 is 1.0; all subsequent lags immediately fall inside the blue shaded 95% confidence interval.
+  - **PACF Plot (Graph 17)**: All partial autocorrelations lie inside the confidence bounds.
+* **Aarchi's Notebook Observation**: *"We finally have confirmed that the series is now stationary, via plots as well as tests."*
+
+---
+
+## 3. Statistical Tests Summary & Exam Rules
+
+| Statistical Test | Code Expression | Null Hypothesis ($H_0$) | Decision Rule | Result on Raw Data | Result on Combined Diff (`sddiff`) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Mann-Kendall Test** | `mk.original_test(data)` | No monotonic trend | $p < 0.05 \rightarrow$ Trend exists | Trend Confirmed ($p < 0.05$) | N/A |
+| **ADF Test** | `adfuller(series)` | Series is Non-Stationary | $p < 0.05 \rightarrow$ Stationary | Non-Stationary ($p = 0.99$) | **Stationary ($p < 0.05$)** |
+| **KPSS Test** | `kpss(series)` | Series is Trend-Stationary | $p > 0.05 \rightarrow$ Stationary | Non-Stationary ($p = 0.01$) | **Stationary ($p > 0.05$)** |
+
+---
+
+## 4. Aarchi's Exact Code Reference
+
 ```python
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pymannkendall as mk
 import seaborn as sns
+from sklearn.metrics import mean_absolute_percentage_error
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from statsmodels.tsa.api import ExponentialSmoothing, Holt, SimpleExpSmoothing
 from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.stattools import adfuller, kpss
 
-# Read and index data
+# 1. Load Data
 data = pd.read_csv('AirPassengers.xls')
 data['Month'] = pd.to_datetime(data['Month'])
 data = data.set_index('Month')
-```
 
-### 2. Mann-Kendall Trend Test
-```python
-import pymannkendall as mk
+# 2. Plot Raw Data (Graph 1)
+sns.lineplot(data)
+plt.ylabel('#Passengers')
+plt.show()
 
-# Test for monotonic trend
-mk_result = mk.original_test(data['#Passengers'])
-print(mk_result)
-```
-
-### 3. Train-Test Split (70/30)
-```python
-train_size = int(len(data) * 0.7)
-train_df = data.iloc[:train_size]
-test_df = data.iloc[train_size:]
-```
-
-### 4. Exponential Smoothing Models
-```python
-from sklearn.metrics import mean_absolute_percentage_error
-from statsmodels.tsa.api import ExponentialSmoothing, Holt, SimpleExpSmoothing
-
-# 1. Single Exponential Smoothing
-model_ses = SimpleExpSmoothing(train_df).fit()
-forecast_ses = model_ses.forecast(len(test_df))
-
-# 2. Holt's Linear (Double Exponential)
-model_holt = Holt(train_df).fit()
-forecast_holt = model_holt.forecast(len(test_df))
-
-# 3. Holt-Winters Additive
-model_hw_add = ExponentialSmoothing(
-    train_df, trend='add', seasonal='add', seasonal_periods=12
-).fit()
-forecast_hw_add = model_hw_add.forecast(len(test_df))
-
-# 4. Holt-Winters Multiplicative
-model_hw_mul = ExponentialSmoothing(
-    train_df, trend='add', seasonal='mul', seasonal_periods=12
-).fit()
-forecast_hw_mul = model_hw_mul.forecast(len(test_df))
-
-# Evaluate MAPE
-mape_add = mean_absolute_percentage_error(
-    test_df['#Passengers'], forecast_hw_add
+# 3. Multiplicative Decomposition (Graph 2)
+result = seasonal_decompose(
+    data[['#Passengers']], model='multiplicative', period=12
 )
-mape_mul = mean_absolute_percentage_error(
-    test_df['#Passengers'], forecast_hw_mul
+result.plot()
+plt.show()
+
+# 4. Mann-Kendall Test
+print(mk.original_test(data['#Passengers']))
+
+# 5. Train Test Split
+train_df = data[: int(data.shape[0] * 0.7)]
+test_df = data[int(data.shape[0] * 0.7) :]
+
+# 6. Fit Models (Graphs 3 - 6)
+model_single_fit = SimpleExpSmoothing(train_df).fit()
+forecast_single = model_single_fit.forecast(len(test_df))
+
+model_double_fit = Holt(train_df).fit()
+forecast_double = model_double_fit.forecast(len(test_df))
+
+model_triple_fit = ExponentialSmoothing(
+    train_df, seasonal_periods=12, trend='add', seasonal='add'
+).fit()
+forecast_triple = model_triple_fit.forecast(len(test_df))
+
+model_triple_fit_mul = ExponentialSmoothing(
+    train_df, seasonal_periods=12, trend='add', seasonal='mul'
+).fit()
+forecast_triple_mul = model_triple_fit_mul.forecast(len(test_df))
+
+# 7. MAPE Evaluation
+print(
+    'MAPE Additive:',
+    mean_absolute_percentage_error(test_df['#Passengers'], forecast_triple),
 )
-print('Additive MAPE:', mape_add)
-print('Multiplicative MAPE:', mape_mul)
-```
+print(
+    'MAPE Multiplicative:',
+    mean_absolute_percentage_error(test_df['#Passengers'], forecast_triple_mul),
+)
 
-### 5. Statistical Stationarity Testing & Differencing Pipeline
-```python
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from statsmodels.tsa.stattools import adfuller, kpss
-
-
-def test_stationarity(series, name='Series'):
-  print(f'=== {name} ===')
-
-  # ADF Test
-  adf_res = adfuller(series.dropna())
-  print(f'ADF Statistic: {adf_res[0]:.4f}, p-value: {adf_res[1]:.4f}')
-
-  # KPSS Test
-  kpss_res = kpss(series.dropna(), regression='c')
-  print(f'KPSS Statistic: {kpss_res[0]:.4f}, p-value: {kpss_res[1]:.4f}\n')
-
-
-# 1. Raw Series
-test_stationarity(data['#Passengers'], 'Raw Data')
-
-# 2. Non-Seasonal Differencing
+# 8. Differencing Pipeline (Graphs 7 - 17)
 diff = data['#Passengers'].diff().dropna()
-test_stationarity(diff, 'Non-Seasonal Diff d=1')
-
-# 3. Seasonal Differencing
 sdiff = data['#Passengers'].diff(12).dropna()
-test_stationarity(sdiff, 'Seasonal Diff D=1')
-
-# 4. Combined Differencing (Seasonal + Non-Seasonal)
 sddiff = sdiff.diff().dropna()
-test_stationarity(sddiff, 'Combined Seasonal & Non-Seasonal Diff')
 
-# Plot ACF & PACF of fully stationary series
-fig, axes = plt.subplots(1, 2, figsize=(16, 4))
-plot_acf(sddiff, ax=axes[0], lags=40)
-plot_pacf(sddiff, ax=axes[1], lags=40)
+print('Final ADF p-value:', adfuller(sddiff)[1])
+print('Final KPSS p-value:', kpss(sddiff)[1])
+
+plot_acf(sddiff)
+plt.show()
+plot_pacf(sddiff)
 plt.show()
 ```
-
----
-
-## 7. Summary & Final Conclusions
-
-1. **AirPassengers Dataset Characteristics**: Displays strong upward trend and expanding seasonal oscillations (period = 12 months).
-2. **Best Forecasting Model**: **Holt-Winters Multiplicative** model out-performs Additive, SES, and Holt's models because it dynamically scales seasonal variation with the trend level.
-3. **Stationarity Requirement**: Neither single non-seasonal differencing (`diff()`) nor single seasonal differencing (`diff(12)`) alone achieves full stationarity under both ADF and KPSS tests.
-4. **Final Differencing**: Applying both seasonal and first differencing (`sddiff = data['#Passengers'].diff(12).diff().dropna()`) yields a fully stationary series, satisfying ADF ($p < 0.05$) and KPSS ($p > 0.05$) tests, ready for SARIMA modeling.
